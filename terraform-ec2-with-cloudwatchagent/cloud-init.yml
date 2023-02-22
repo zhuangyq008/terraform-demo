@@ -1,0 +1,143 @@
+#cloud-config
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+packages:
+- java
+- nc
+
+write_files:
+- path: /run/godemo.service
+  permissions: 0644
+  content: |
+    [Unit]
+    Description=godemo Service
+    Requires=network.target
+    After=network.target
+    [Service]
+    Type=forking
+    LimitNOFILE=65536
+    ExecStart=/usr/local/godemo/bin/app
+    ExecStop=/usr/local/godemo/bin/stopapp.sh
+    Restart=always
+    RestartSec=3
+    StartLimitInterval=0
+    [Install]
+    WantedBy=default.target
+
+
+- path: /run/install_godemo.sh
+  permissions: 0700
+  content: |
+    echo Installing godemo
+    
+    mkdir -p /usr/local/godemo/bin
+    aws s3 cp s3://enginez-code/app /usr/local/godemo/bin/app
+    aws s3 cp s3://enginez-code/stopapp.sh /usr/local/godemo/bin/stopapp.sh
+    chmod +x /usr/local/godemo/bin/app
+    chmod +x /usr/local/godemo/bin/stopapp.sh
+
+    /bin/cp -avf /run/godemo.service /usr/lib/systemd/system/godemo.service
+    systemctl daemon-reload
+    systemctl enable godemo
+    systemctl start godemo
+
+- path: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  permissions: 0644
+  content: |
+    {
+      "agent": {
+        "metrics_collection_interval": 10,
+        "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log"
+      },
+      "metrics": {
+        "append_dimensions": {
+          "AutoScalingGroupName": "$${aws:AutoScalingGroupName}",
+          "ImageId": "$${aws:ImageId}",
+          "InstanceId": "$${aws:InstanceId}",
+          "InstanceType": "$${aws:InstanceType}"
+        },
+        "metrics_collected": {
+          "cpu": {
+            "measurement": [
+              "cpu_usage_system",
+              "cpu_usage_idle",
+              "cpu_usage_nice",
+              "cpu_usage_guest",
+              "cpu_usage_steal"
+            ]
+          },
+          "mem": {
+            "measurement": [
+              "mem_used_percent"
+            ]
+          },
+          "net": {
+            "resources": [
+              "eth0"
+            ],
+            "measurement": [
+              "bytes_sent",
+              "bytes_recv",
+              "drop_in",
+              "drop_out"
+            ]
+          },
+          "netstat": {
+            "measurement": [
+              "tcp_established",
+              "tcp_syn_sent",
+              "tcp_close"
+            ],
+            "metrics_collection_interval": 60
+          }
+        }
+      },
+      "logs": {
+        "logs_collected": {
+          "files": {
+            "collect_list": [
+              {
+                "file_path": "/usr/local/godemo/logs/*.log",
+                "log_group_name": "godemo-log-group",
+                "timezone": "UTC",
+                "timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+              },
+              {
+                  "file_path": "/var/log/messages",
+                  "log_group_name": "godemosystem-log-group",
+                  "log_stream_name": "{hostname}-messages",
+                  "timezone": "UTC"
+              }
+            ]
+          }
+        },
+        "force_flush_interval" : 15
+      }
+    }
+- path: /run/install_cloudwatch.sh
+  permissions: 0700
+  content: |
+    #!/bin/bash
+    echo Installing CloudWatch Agent
+    rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+    systemctl daemon-reload
+    systemctl enable amazon-cloudwatch-agent 
+    systemctl start amazon-cloudwatch-agent
+runcmd:
+- /run/install_godemo.sh
+- /run/install_cloudwatch.sh

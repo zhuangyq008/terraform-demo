@@ -25,9 +25,7 @@ terraform {
 provider "aws" {
   region     = "ap-southeast-1"
 }
-variable "keyName" {
-  default = "my-kp-default"
-}
+
 variable "vpcid" {
   default = "vpc-034cff70368626c7c"
 }

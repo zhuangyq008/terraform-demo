@@ -6,6 +6,8 @@
 
 配置说明：
 
+配置好AWS CLI 的**aws_access_key_id, aws_secret_access_key**
+
 **variables.tf**配置了部分参数:
 
 image_id: 这个是新加坡region的AMI AL2 X84_64，如果要换成其他区域调整成匹配的AMI ID
@@ -27,3 +29,14 @@ securityGroups: 配置安全组ID，开放80，8080，22
 path= `/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json`
 
 这个是配置cloudwatch agent的配置，您可以参考调整成您的采集目录及日志格式
+
+## 执行
+
+```
+cd terraform-ec2-with-cloudwatchagent
+terraform init 
+terraform validate #检查配置
+terraform paln
+terraform apply #应用配置
+terraform destroy # 销毁配置
+```

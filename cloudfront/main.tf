@@ -1,5 +1,6 @@
 
 #see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution
+# bucket替换您的桶
 resource "aws_s3_bucket" "b" {
   bucket = "poc-website-enginez"
   acl = "private"
@@ -8,7 +9,7 @@ resource "aws_s3_bucket" "b" {
     Name = "terraform web poc bucket"
   }
 }
-
+# 日志bucket替换您的桶
 resource "aws_s3_bucket" "logbucket" {
   bucket = "poc-engine-logmain"
 

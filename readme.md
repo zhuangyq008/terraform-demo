@@ -1,5 +1,11 @@
 # Terraform demo
 
+## 配置准备
+
+1. [安装AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) 
+2. 配置IAM用户并分配创建资源需要的权限，导出AK，SK
+3. [安装Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+
 ## terraform-ec2-with-cloudwatchagent
 
 这个demo是通过terraform配置ALB，EC2 with AutoscalingGroup, EC2通过userdata初始化了一个web应用、cloudwatch agent的安装

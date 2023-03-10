@@ -13,6 +13,9 @@ provider "aws" {
 # 创建一个 VPC
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "ECS-Example-VPC"
+  }  
 }
 # 创建一个Internet网关
 resource "aws_internet_gateway" "example" {
@@ -27,6 +30,9 @@ resource "aws_internet_gateway" "example" {
 # }
 resource "aws_eip" "example" {
   vpc = true
+  tags = {
+    Name = "ECS-Example-EIP"
+  }    
 }
 # 创建一个子网
 # resource "aws_subnet" "example" {
@@ -39,7 +45,7 @@ resource "aws_subnet" "example_a" {
   cidr_block = "10.0.1.0/24"
   availability_zone = "us-east-1a"
   tags = {
-    Name = "Public-subnet"
+    Name = "Public-subnet-ECS"
   }
 }
 
@@ -48,7 +54,7 @@ resource "aws_subnet" "example_b" {
   cidr_block = "10.0.2.0/24"
   availability_zone = "us-east-1b"
   tags = {
-    Name = "Public-subnet"
+    Name = "Public-subnet-ECS"
   }  
 }
 resource "aws_route_table" "public" {
@@ -69,6 +75,9 @@ resource "aws_route_table_association" "b" {
 # 创建一个 ECS 集群
 resource "aws_ecs_cluster" "example" {
   name = "example"
+  tags = {
+    Name = "ECS-Example-Cluster"
+  }    
 }
 
 # 创建一个 ECS 服务
@@ -76,7 +85,10 @@ resource "aws_ecs_service" "example" {
   name            = "example"
   cluster         = aws_ecs_cluster.example.id
   task_definition = aws_ecs_task_definition.example.arn
-  desired_count   = 1
+  desired_count   = 2
+  lifecycle {
+    ignore_changes = [desired_count]
+  }  
 
   # 配置负载均衡
   load_balancer {
@@ -101,8 +113,8 @@ resource "aws_ecs_service" "example" {
 resource "aws_ecs_task_definition" "example" {
   family                   = "example"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = "512"
+  memory                   = "1024"
   network_mode             = "awsvpc"
 
   # 定义容器
@@ -110,7 +122,8 @@ resource "aws_ecs_task_definition" "example" {
     {
       name      = "nginx"
       image     = "nginx"
-      memory    = 128
+      cpu       = 256
+      memory    = 512
       portMappings = [
         {
           containerPort = 80
@@ -196,6 +209,9 @@ resource "aws_lb" "example" {
   internal           = false
   load_balancer_type = "application"
   subnets            = [aws_subnet.example_a.id,aws_subnet.example_b.id]
+  tags = {
+    Name = "ECS-Example-ALB"
+  }    
 }
 
 # 创建一个监听器

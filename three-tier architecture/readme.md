@@ -1,7 +1,8 @@
-# 三层架构搭建
+# Use Terraform to build a classic three-tier architecture stack
 
-![1679563534552](image/readme/1679563534552.png)
+![1679569881318](image/readme/1679569881318.png)
 
+![1679569821121](image/readme/1679569821121.png)
 
 * Terraform will create below resources
   * VPC

@@ -6,6 +6,15 @@
 2. 配置IAM用户并分配创建资源需要的权限，导出AK，SK
 3. [安装Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
+## 执行说明
+
+Terraform 是一个基础设施自动化工具，可以管理云端资源的创建、修改和删除等操作。当 Terraform 执行出错时，可以采取以下几个步骤来回滚：
+
+1. 执行 terraform destroy 命令：如果你的错误是在创建资源时发生的，那么可以使用 terraform destroy 命令来删除已经创建的资源。这个命令会将所有的资源都删除，所以要注意不要误操作删除其他的资源。
+2. 执行 terraform state rm 命令：如果错误是在修改资源时发生的，那么可以使用 terraform state rm 命令来删除出错的资源。这个命令可以单独删除一个资源的状态，然后再执行 terraform apply 命令重新创建这个资源。
+3. 使用版本控制工具：如果你使用了版本控制工具（如 Git），可以回退到出错之前的代码版本。这个方法需要注意的是，如果你之前已经执行了 terraform apply 命令来创建了资源，需要执行 terraform destroy 命令来删除这些资源。
+   在回滚之前，一定要先备份你的 Terraform 代码和状态文件，以免回滚时出现其他错误导致资源丢失或数据丢失。
+
 ## terraform-ec2-with-cloudwatchagent
 
 这个demo是通过terraform配置ALB，EC2 with AutoscalingGroup, EC2通过userdata初始化了一个web应用、cloudwatch agent的安装
@@ -44,13 +53,13 @@ terraform init
 terraform validate #检查配置
 terraform paln
 terraform apply #应用配置
+terraform apply --auto-approve #自动
 terraform destroy # 销毁配置
 ```
 
 ## Terraform维护命令
 
 ### 删除某个资源
-
 
 要单独删除 Terraform 配置文件中的某个资源（resource），可以使用 `terraform destroy` 命令。具体操作如下：
 

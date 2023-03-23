@@ -118,9 +118,9 @@ resource "aws_autoscaling_group" "ss" {
   name                      = "ssm-demo-asg"
   availability_zones        = data.aws_availability_zones.available.names
   
-  desired_capacity          = 3
+  desired_capacity          = 1
   min_size                  = 1
-  max_size                  = 3
+  max_size                  = 1
 
   launch_template {
     id      = aws_launch_template.ss.id

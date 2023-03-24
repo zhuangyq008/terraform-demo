@@ -1,8 +1,8 @@
 # Use Terraform to build a classic three-tier architecture stack
 
-![1679569881318](image/readme/1679569881318.png)
+![1679623260073](image/readme/1679623260073.png)
 
-![1679569821121](image/readme/1679569821121.png)
+![1679623269805](image/readme/1679623269805.png)
 
 * Terraform will create below resources
   * VPC

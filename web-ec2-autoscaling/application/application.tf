@@ -63,7 +63,7 @@ resource "aws_launch_template" "devax" {
   image_id                             = var.app_ami
   instance_initiated_shutdown_behavior = "terminate"
   instance_type                        = var.app_inst_type
-  key_name                             = var.key_name
+  #key_name                             = var.key_name
   iam_instance_profile {
     name = aws_iam_instance_profile.ss.name
   }
@@ -110,8 +110,8 @@ resource "aws_launch_template" "devax" {
 resource "aws_autoscaling_group" "devax" {
   name                      = "devax-demo-asg"
   vpc_zone_identifier       = var.vpc_zone_identifier
-  desired_capacity          = 6
-  min_size                  = 2
+  desired_capacity          = 4
+  min_size                  = 0
   max_size                  = 10
   
   mixed_instances_policy {
@@ -152,6 +152,7 @@ resource "aws_autoscaling_group" "devax" {
    vpc_id   = var.vpc_id
    health_check {
      path = "/ping"
+     interval = 15
    }   
  }
 

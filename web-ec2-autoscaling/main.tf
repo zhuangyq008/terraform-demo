@@ -1,10 +1,22 @@
 provider "aws" {
-  region = local.region
+  #region = local.region
+  region = "us-west-2"
 }
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
+
+data "aws_ami" "base" {
+  owners = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+  }
+
+  most_recent = true
+}
 
 locals {
   name = var.cluster_name
@@ -15,7 +27,7 @@ locals {
   region       = var.region
 
   vpc_cidr = "10.0.0.0/16"
-  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
+  azs      = slice(data.aws_availability_zones.available.names, 0, 2)
 
   tags = {
     Blueprint  = local.name
@@ -39,17 +51,16 @@ module "vpc" {
   private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 10)]
 
   enable_nat_gateway   = true
-  single_nat_gateway   = true
-  enable_dns_hostnames = true
+  single_nat_gateway   = false
 
-  # redis
-  create_elasticache_subnet_group = true
-  elasticache_subnet_group_name   = "redis-subnet"
-  elasticache_subnets             = ["10.0.50.0/24"]
+  # # redis
+  # create_elasticache_subnet_group = true
+  # elasticache_subnet_group_name   = "redis-subnet"
+  # elasticache_subnets             = ["10.0.50.0/24"]
 
-  # database
-  database_subnets                = ["10.0.60.0/24", "10.0.61.0/24", "10.0.62.0/24"]
-  database_subnet_group_name      = "database-subnet"
+  # # database
+  # database_subnets                = ["10.0.60.0/24", "10.0.61.0/24", "10.0.62.0/24"]
+  # database_subnet_group_name      = "database-subnet"
 
   # Manage so we can name
   manage_default_network_acl    = true
@@ -60,13 +71,11 @@ module "vpc" {
   default_security_group_tags   = { Name = "${local.name}-default" }
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                      = 1
+    "Name" = "${local.cluster_name}-public"
   }
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"             = 1
+    "Name" = "${local.cluster_name}-private"
   }
 
   tags = local.tags
@@ -79,17 +88,18 @@ module application {
   public_subnets     = module.vpc.public_subnets
   vpc_security_group_ids = [aws_security_group.terramino_instance.id]
   lb_security_groups    = [aws_security_group.terramino_lb.id]
+  app_ami = data.aws_ami.base.id
 }
 
-module database {
-  source             = "./database"
-  vpc_id             = module.vpc.vpc_id
-  redis_subnet_group_name  = module.vpc.elasticache_subnet_group_name
-  database_subnets   = module.vpc.database_subnets
-}
+# module database {
+#   source             = "./database"
+#   vpc_id             = module.vpc.vpc_id
+#   redis_subnet_group_name  = module.vpc.elasticache_subnet_group_name
+#   database_subnets   = module.vpc.database_subnets
+# }
 
 
-resource "aws_s3_bucket" "frontend_static_website" {
-  bucket = "devax-eshop-frontend-enginez2"
-  force_destroy = true
-}
+# resource "aws_s3_bucket" "frontend_static_website" {
+#   bucket = "devax-eshop-frontend-enginez2"
+#   force_destroy = true
+# }

@@ -89,6 +89,7 @@ resource "aws_launch_template" "devax" {
 
     tags = {
       Name = "godemo"
+      Project = "ST-Godemo"
     }
   }
 }
@@ -109,14 +110,35 @@ resource "aws_launch_template" "devax" {
 resource "aws_autoscaling_group" "devax" {
   name                      = "devax-demo-asg"
   vpc_zone_identifier       = var.vpc_zone_identifier
-  desired_capacity          = 2
-  min_size                  = 1
-  max_size                  = 3
+  desired_capacity          = 6
+  min_size                  = 2
+  max_size                  = 10
+  
+  mixed_instances_policy {
 
+    instances_distribution {
+      # on_demand_base_capacity = 2
+      # on_demand_percentage_above_base_capacity = 50
+      spot_allocation_strategy = "capacity-optimized"
+    }
 
-  launch_template {
-    id      = aws_launch_template.devax.id
-    version = "$Latest"
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.devax.id
+        version = "$Latest"
+      }
+      override {
+        instance_type = "t3.medium"
+        weighted_capacity = "3"
+      }
+
+      override {
+        instance_type = "t2.micro"
+        weighted_capacity = "2"
+      }
+
+    }
+    
   }
 
   lifecycle {

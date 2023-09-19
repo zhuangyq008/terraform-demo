@@ -87,10 +87,7 @@ resource "aws_launch_template" "devax" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = {
-      Name = "godemo"
-      Project = "ST-Godemo"
-    }
+    tags = var.ec2_tags
   }
 }
 # resource "aws_launch_configuration" "terramino" {

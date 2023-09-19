@@ -32,6 +32,7 @@ locals {
   tags = {
     Blueprint  = local.name
     Project = "devax-three-tier"
+    Environment = "Prd"
   }
 }
 
@@ -41,7 +42,7 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  version = "5.1.2"
 
   name = local.name
   cidr = local.vpc_cidr
@@ -81,14 +82,75 @@ module "vpc" {
   tags = local.tags
 }
 
+resource "aws_security_group" "terramino_instance" {
+  name = "learn-asg-terramino-instance"
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.terramino_lb.id]
+  }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }  
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }  
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.terramino_lb.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  vpc_id = module.vpc.vpc_id
+}
+
+resource "aws_security_group" "terramino_lb" {
+  name = "learn-asg-terramino-lb"
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  vpc_id = module.vpc.vpc_id
+}
+
 module application {
-  source             = "./application"
+  source             = "../../application"
   vpc_id             = module.vpc.vpc_id
   vpc_zone_identifier = module.vpc.private_subnets
   public_subnets     = module.vpc.public_subnets
   vpc_security_group_ids = [aws_security_group.terramino_instance.id]
   lb_security_groups    = [aws_security_group.terramino_lb.id]
   app_ami = data.aws_ami.base.id
+  ec2_tags = local.tags
 }
 
 # module database {

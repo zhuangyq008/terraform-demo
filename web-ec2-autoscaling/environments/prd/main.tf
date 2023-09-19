@@ -1,8 +1,18 @@
 provider "aws" {
-  #region = local.region
-  region = "us-west-2"
+  region = local.region
 }
-
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.17.0"
+    }
+  }
+  backend "s3" {
+    key    = "web-server-autoscaling-tf-prd"
+    region = "us-west-2"
+  }
+}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}

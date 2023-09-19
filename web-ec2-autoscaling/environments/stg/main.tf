@@ -9,7 +9,7 @@ terraform {
     }
   }
   backend "s3" {
-    key    = "web-server-autoscaling-tf"
+    key    = "web-server-autoscaling-tf-stg"
     region = "us-west-2"
   }
 }

@@ -8,10 +8,10 @@ terraform {
       version = "5.17.0"
     }
   }
-  backend "s3" {
-    key    = "web-server-autoscaling-tf"
-    region = "us-west-2"
-  }
+  # backend "s3" {
+  #   key    = "web-server-autoscaling-tf"
+  #   region = "us-west-2"
+  # }
 }
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}

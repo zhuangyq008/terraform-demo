@@ -87,7 +87,11 @@ resource "aws_launch_template" "devax" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = var.ec2_tags
+    tags = {
+      Name  = "godemo-app"
+      Project = "devax-three-tier"
+      Environment = "Dev"    
+    }
   }
 }
 # resource "aws_launch_configuration" "terramino" {

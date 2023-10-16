@@ -1,0 +1,129 @@
+#cloud-config
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+packages:
+- java
+- nc
+
+write_files:
+
+- path: /run/install_nginx.sh
+  permissions: 0700
+  content: |
+    echo Installing godemo
+    sudo yum update -y
+    sudo amazon-linux-extras install nginx1 -y 
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+
+- path: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  permissions: 0644
+  content: |
+    {
+      "agent": {
+        "metrics_collection_interval": 10,
+        "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log"
+      },
+      "metrics": {
+        "append_dimensions": {
+          "AutoScalingGroupName": "$${aws:AutoScalingGroupName}",
+          "ImageId": "$${aws:ImageId}",
+          "InstanceId": "$${aws:InstanceId}",
+          "InstanceType": "$${aws:InstanceType}"
+        },
+        "metrics_collected": {
+          "cpu": {
+            "measurement": [
+              "cpu_usage_system",
+              "cpu_usage_idle",
+              "cpu_usage_nice",
+              "cpu_usage_guest",
+              "cpu_usage_steal"
+            ]
+          },
+          "mem": {
+            "measurement": [
+              "mem_used_percent"
+            ]
+          },
+          "net": {
+            "resources": [
+              "eth0"
+            ],
+            "measurement": [
+              "bytes_sent",
+              "bytes_recv",
+              "drop_in",
+              "drop_out"
+            ]
+          },
+          "netstat": {
+            "measurement": [
+              "tcp_established",
+              "tcp_syn_sent",
+              "tcp_close"
+            ],
+            "metrics_collection_interval": 60
+          }
+        }
+      },
+      "logs": {
+        "logs_collected": {
+          "files": {
+            "collect_list": [
+              {
+                "file_path": "/var/log/nginx/access.log",
+                "log_group_name": "/enginez/ngx-log-group",
+                "timezone": "UTC",
+                "timestamp_format": "%Y-%m-%d %H:%M:%S,%f"
+              },
+              {
+                  "file_path": "/var/log/messages",
+                  "log_group_name": "/enginez/godemosystem-log-group",
+                  "log_stream_name": "{hostname}-messages",
+                  "timezone": "UTC"
+              }
+            ]
+          }
+        },
+        "force_flush_interval" : 15
+      }
+    }
+- path: /run/install_cloudwatch.sh
+  permissions: 0700
+  content: |
+    #!/bin/bash
+    echo Installing CloudWatch Agent
+    rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+    systemctl daemon-reload
+    systemctl enable amazon-cloudwatch-agent 
+    systemctl start amazon-cloudwatch-agent
+- path: /run/ssm.sh
+  permissions: 0700
+  content: |
+    #!/bin/bash
+    echo Installing SSM Agent
+    #!/bin/bash
+    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+    sudo systemctl enable amazon-ssm-agent
+    sudo systemctl start amazon-ssm-agent
+
+runcmd:
+- /run/install_nginx.sh
+- /run/install_cloudwatch.sh
+- /run/ssm.sh

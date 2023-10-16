@@ -160,7 +160,6 @@ module application {
   vpc_security_group_ids = [aws_security_group.terramino_instance.id]
   lb_security_groups    = [aws_security_group.terramino_lb.id]
   app_ami = data.aws_ami.base.id
-  ec2_tags = local.tags
 }
 
 # module database {

@@ -4,9 +4,7 @@ variable "vpc_id" {
 variable "vpc_zone_identifier" {
   
 }
-variable "ec2_tags" {
-  
-}
+
 variable "vpc_security_group_ids" {
   
 }

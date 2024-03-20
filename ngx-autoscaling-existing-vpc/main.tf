@@ -11,7 +11,7 @@ terraform {
 }
 
 variable "vpc_id" {
-    default = "vpc-06f302e73a1396163"
+    default = "vpc-0533d70a4f51d42c7"
 }
 variable "app_inst_type" {
   default = "t3.medium"
@@ -31,10 +31,10 @@ data "aws_subnets" "private" {
   }
 }
 variable "security_group_id_instance" {
-    default = "sg-058dda7fe9c51ce8c"
+    default = "sg-0562c799bf21129bc"
 }
 variable "security_group_id_lb" {
-    default = "sg-08ac925a09b7ae17b"
+    default = "sg-0d7578f51c28c1f16"
 }
 data "aws_subnets" "public" {
   filter {
